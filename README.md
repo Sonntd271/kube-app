@@ -16,4 +16,9 @@ Second: Create an EBS volume
 <br>
 `aws ec2 create-volume --availability-zone=us-east-1a --size=3 --volume-type=gp2`
 <br>
-This volume will be used to store the MySQL data
+This volume will be used to store MySQL data. Tag the volume with `KubernetesCluster=your-cluster-name` so the volume will be able to connect
+<br> <br>
+Third: Create a secret object
+<br>
+`kubectl create -f app-secret.yaml`
+<br>

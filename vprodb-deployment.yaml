@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: deployment
+metadata:
+  name: vprodb
+  labels:
+    app: vprodb
+spec:
+  selector:
+    matchLabels:
+      app: vprodb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vprodb
+    spec:
+      containers:
+        - name: vprodb
+          image: itssonii/vprofiledb:latest
+          volumeMounts:
+            - name: vprodb-data
+              mountPath: /var/lib/mysql
+          ports:
+            - name: vprodb-port
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: db-pass
+      nodeSelector:
+        zone: us-east-1a
+      # Volume should be in the same zone as the node
+      volumes:
+        - name: vprodb-data
+          awsElasticBlockStore:
+            volumeID: vol-0935c2f12d5c7ad4d
+            fsType: ext4
+      
+      # Used to clear the lost+found directory created when volume type is ext4
+      # so that MySQL service is able to start properly
+      initContainers:
+        - name: busybox
+          image: busybox:latest
+          args: ["rm", "-rf", "/var/lib/mysql/lost+found"]
+          volumeMounts:
+            - name: vprodb-data
+              mountPath: /var/lib/mysql
